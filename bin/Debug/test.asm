@@ -1,25 +1,26 @@
-ARR     .INT 11
-        .INT 34
-        .INT 43
-        .INT -39
-        .INT 54
-NEWLINE .BYT 10
-I .INT 0
-SIZE .INT 5
-LDA R4 ARR
-WHILE   LDR R0 I
-        LDR R1 SIZE
-        CMP R0 R1
-        BRZ R0 ENDWHILE
-        LDR R3 R4
-        TRP 1
-        LDB R3 NEWLINE # Print 
-        TRP 3          # blank 
-        ADI R4 4
-        LDR R0 I
-        ADI R0 1
-        STR R0 I
-        JMP WHILE
-ENDWHILE TRP 0      
+DAGS  .BYT D
+      .BYT A
+      .BYT G
+      .BYT S
+GADS .INT -99
+LDR R0 DAGS
+STR R0 GADS     # Store integer value of DAGS at GADS
+LDA R0 GADS     # Swap 'D' and 'G' at GADS
+LDB R1 GADS
+ADI R0 2
+LDB R2 R0
+STB R1 R0
+LDA R0 GADS
+STB R2 R0       # End of swap
+LDB R3 GADS     
+TRP 3
+ADI R0 1
+LDB R3 R0
+TRP 3
+ADI R0 1
+LDB R3 R0
+TRP 3
+ADI R0 1
+LDB R3 R0
+TRP 3
 TRP 0
-

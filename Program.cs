@@ -14,7 +14,7 @@ namespace CS4380_Project2
         public int code;
         bool codeSet;
         public byte[] mem;
-        string[] instSym = new string[] { "ADD", "ADI", "SUB", "MUL", "DIV", "AND", "OR", "CMP", "TRP", "MOV", "LDA", "STR", "LDR", "LDB", "JMP", "BRZ" };
+        string[] instSym = new string[] { "ADD", "ADI", "SUB", "MUL", "DIV", "AND", "OR", "CMP", "TRP", "MOV", "LDA", "STR", "LDR", "LDB", "JMP", "BRZ", "STB" };
 
         public Assembler()
         {
@@ -202,6 +202,11 @@ namespace CS4380_Project2
                     opInt = 9;
                     break;
 
+                case "STB":
+                    if (op2[0] == 'R') opInt = 24;
+                    else opInt = 11;
+                    break;
+
                 case "LDR":
                     if (op2[0] == 'R') opInt = 23;
                     else opInt = 10;
@@ -212,7 +217,8 @@ namespace CS4380_Project2
                     break;
 
                 case "LDB":
-                    opInt = 12;
+                    if (op2[0] == 'R') opInt = 25;
+                    else opInt = 12;
                     break;
 
                 case "TRP":
@@ -292,7 +298,7 @@ namespace CS4380_Project2
         {
             //if (args.Length < 1) { Console.WriteLine("No arguments"); return; }
 
-            string file = "proj2.asm";
+            string file = "test.asm";
 
             Assembler assembler = new Assembler();
             assembler.PassOne(file);
@@ -351,6 +357,10 @@ namespace CS4380_Project2
                         LDR(inst);
                         break;
 
+                    case 11:
+                        STB(inst);
+                        break;
+
                     case 12:
                         LDB(inst);
                         break;
@@ -386,6 +396,14 @@ namespace CS4380_Project2
 
                     case 23:
                         LDRadd(inst);
+                        break;
+
+                    case 24:
+                        STBadd(inst);
+                        break;
+
+                    case 25:
+                        LDBadd(inst);
                         break;
                 }
 
@@ -435,6 +453,11 @@ namespace CS4380_Project2
             reg[inst[1]] = BitConverter.ToInt32(mem, inst[2]);
         }
 
+        void LDBadd(int[] inst)
+        {
+            reg[inst[1]] = (char)mem[reg[inst[2]]];
+        }
+
         // This is the LDR function that adds the destination register with the value from the address in the source register
         void LDRadd(int[] inst)
         {
@@ -444,6 +467,20 @@ namespace CS4380_Project2
         void CMP(int[] inst)
         {
             reg[inst[1]] = reg[inst[1]] - reg[inst[2]];
+        }
+
+        void STBadd(int[] inst)
+        {
+            var bytes = (byte)reg[inst[1]];
+
+            mem[reg[inst[2]]] = bytes;
+        }
+
+        void STB(int[] inst)
+        {
+            var bytes = (byte)reg[inst[1]];
+
+            mem[inst[2]] = bytes;
         }
 
         void STR(int[] inst)

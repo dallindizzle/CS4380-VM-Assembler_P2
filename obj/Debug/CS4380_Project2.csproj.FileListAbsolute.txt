@@ -1,0 +1,7 @@
+C:\Users\dcs37\source\repos\CS4380_Project2\CS4380_Project2\bin\Debug\CS4380_Project2.exe.config
+C:\Users\dcs37\source\repos\CS4380_Project2\CS4380_Project2\bin\Debug\CS4380_Project2.exe
+C:\Users\dcs37\source\repos\CS4380_Project2\CS4380_Project2\bin\Debug\CS4380_Project2.pdb
+C:\Users\dcs37\source\repos\CS4380_Project2\CS4380_Project2\obj\Debug\CS4380_Project2.csprojAssemblyReference.cache
+C:\Users\dcs37\source\repos\CS4380_Project2\CS4380_Project2\obj\Debug\CS4380_Project2.csproj.CoreCompileInputs.cache
+C:\Users\dcs37\source\repos\CS4380_Project2\CS4380_Project2\obj\Debug\CS4380_Project2.exe
+C:\Users\dcs37\source\repos\CS4380_Project2\CS4380_Project2\obj\Debug\CS4380_Project2.pdb

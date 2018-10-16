@@ -14,7 +14,7 @@ namespace CS4380_Project2
         public int code;
         bool codeSet;
         public byte[] mem;
-        string[] instSym = new string[] { "ADD", "ADI", "SUB", "MUL", "DIV", "AND", "OR", "CMP", "TRP", "MOV", "LDA", "STR", "LDR", "LDB", "JMP", "BRZ", "STB" };
+        string[] instSym = new string[] { "ADD", "ADI", "SUB", "MUL", "DIV", "AND", "OR", "CMP", "TRP", "MOV", "LDA", "STR", "LDR", "LDB", "JMP", "BRZ", "STB", "BLT" };
 
         public Assembler()
         {
@@ -186,6 +186,10 @@ namespace CS4380_Project2
                     opInt = 1;
                     break;
 
+                case "BLT":
+                    opInt = 5;
+                    break;
+
                 case "BRZ":
                     opInt = 6;
                     break;
@@ -337,6 +341,10 @@ namespace CS4380_Project2
                         JMP(inst);
                         break;
 
+                    case 5:
+                        BLT(inst);
+                        break;
+
                     case 6:
                         BRZ(inst);
                         break;
@@ -426,6 +434,11 @@ namespace CS4380_Project2
         void JMP(int[] inst)
         {
             PC = inst[1];
+        }
+
+        void BLT(int[] inst)
+        {
+            if (reg[inst[1]] < 0) PC = inst[2];
         }
 
         void BRZ(int[] inst)

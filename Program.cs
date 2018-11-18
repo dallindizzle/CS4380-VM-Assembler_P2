@@ -1,28 +1,31 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
-namespace CS4380_Project2
+namespace CS4380_Project3
 {
     class Assembler
     {
         Dictionary<string, int> symbols;
+        public int SIZE;
         public int PC;
         public int code;
         bool codeSet;
         public byte[] mem;
-        string[] instSym = new string[] { "ADD", "ADI", "SUB", "MUL", "DIV", "AND", "OR", "CMP", "TRP", "MOV", "LDA", "STR", "LDR", "LDB", "JMP", "BRZ", "STB", "BLT" };
+        string[] instSym = new string[] { "ADD", "ADI", "SUB", "MUL", "DIV", "AND", "OR", "CMP", "TRP", "MOV", "LDA", "STR", "LDR", "LDB", "JMP", "JMR", "BRZ", "BNZ", "STB", "BLT" };
+        string[] regSym = new string[] { "PC", "SL", "SP", "FP", "SB" };
 
-        public Assembler()
+        public Assembler(int size)
         {
             symbols = new Dictionary<string, int>();
             PC = 0;
             code = 0;
             codeSet = false;
-            mem = new byte[10000];
+            SIZE = size;
+            mem = new byte[SIZE];
         }
 
         public void PassOne(string file)
@@ -32,7 +35,7 @@ namespace CS4380_Project2
             string line;
             while ((line = reader.ReadLine()) != null)
             {
-                if (line == "") continue;
+                if (string.IsNullOrWhiteSpace(line)) continue;
 
                 // This parses the line of assembly code by splitting by the a comment (#) and then trimming the line, then splitting by whitepace
                 var tokens = line.Split('#')[0].Trim().Split(' ');
@@ -76,7 +79,7 @@ namespace CS4380_Project2
             string line;
             while ((line = reader.ReadLine()) != null)
             {
-                if (line == "") continue;
+                if (string.IsNullOrWhiteSpace(line)) continue;
 
                 // This parses the line of assembly code by splitting by the a comment (#) and then trimming the line, then splitting by whitepace
                 var tokens = line.Split('#')[0].Trim().Split(' ');
@@ -106,22 +109,9 @@ namespace CS4380_Project2
                         if (int.TryParse(tokens[1], out int i)) InsertChar(int.Parse(tokens[1]), PC);
                         else InsertMem(tokens[1][0], PC);
                     }
-                    
+
                     PC += (tokens[0] == ".INT") ? 4 : 1;
-                    
-                    //if (tokens[1] == ".INT")
-                    //    InsertMem(int.Parse(tokens[2]), symbols[tokens[0]]);
-                    //else
-                    //{
-                    //    //var val = tokens[2].Split('\'')[1][0];
-                    //    //var val = Encoding.ASCII.GetBytes(tokens[2]);
 
-                    //    // Insert the value into memory using the symbols table
-                    //    if (int.TryParse(tokens[2], out int i)) InsertChar(int.Parse(tokens[2]), symbols[tokens[0]]);
-                    //    else InsertMem(tokens[2][0], symbols[tokens[0]]);
-
-                    //    //InsertMem(val, symbols[tokens[0]]);
-                    //}
                 }
                 else
                 {
@@ -186,6 +176,14 @@ namespace CS4380_Project2
                     opInt = 1;
                     break;
 
+                case "JMR":
+                    opInt = 2;
+                    break;
+
+                case "BNZ":
+                    opInt = 3;
+                    break;
+
                 case "BLT":
                     opInt = 5;
                     break;
@@ -203,16 +201,17 @@ namespace CS4380_Project2
                     break;
 
                 case "STR":
-                    opInt = 9;
+                    if (op2[0] == 'R' || regSym.Contains(op2)) opInt = 22;
+                    else opInt = 9;
                     break;
 
                 case "STB":
-                    if (op2[0] == 'R') opInt = 24;
+                    if (op2[0] == 'R' || regSym.Contains(op2)) opInt = 24;
                     else opInt = 11;
                     break;
 
                 case "LDR":
-                    if (op2[0] == 'R') opInt = 23;
+                    if (op2[0] == 'R' || regSym.Contains(op2)) opInt = 23;
                     else opInt = 10;
                     break;
 
@@ -261,9 +260,21 @@ namespace CS4380_Project2
                 t1.CopyTo(tBytes, 4);
                 return tBytes;
             }
-            else if (opInt == 1)
+            else if (opInt == 1 || opInt == 2)
             {
-                op1Int = symbols[op1];
+                if (op1[0] == 'R') op1Int = (int)char.GetNumericValue(op1[1]);
+                else if (op1 == "PC")
+                    op1Int = 8;
+                else if (op1 == "SL")
+                    op1Int = 9;
+                else if (op1 == "SP")
+                    op1Int = 10;
+                else if (op1 == "FP")
+                    op1Int = 11;
+                else if (op1 == "SB")
+                    op1Int = 12;
+                else op1Int = symbols[op1];
+
                 byte[] jBytes = new byte[12];
                 var j = BitConverter.GetBytes(opInt);
                 var j1 = BitConverter.GetBytes(op1Int);
@@ -273,13 +284,34 @@ namespace CS4380_Project2
             }
 
             if (op1[0] == 'R') op1Int = (int)char.GetNumericValue(op1[1]);
+            else if (op1 == "PC")
+                op1Int = 8;
+            else if (op1 == "SL")
+                op1Int = 9;
+            else if (op1 == "SP")
+                op1Int = 10;
+            else if (op1 == "FP")
+                op1Int = 11;
+            else if (op1 == "SB")
+                op1Int = 12;
             else op1Int = symbols[op1];
 
             if (opInt == 14)
-                op2Int = (int)char.GetNumericValue(op2[0]);
+                //op2Int = (int)char.GetNumericValue(op2[0]);
+                op2Int = Int32.Parse(op2);
             else
             {
                 if (op2[0] == 'R') op2Int = (int)char.GetNumericValue(op2[1]);
+                else if (op2 == "PC")
+                    op2Int = 8;
+                else if (op2 == "SL")
+                    op2Int = 9;
+                else if (op2 == "SP")
+                    op2Int = 10;
+                else if (op2 == "FP")
+                    op2Int = 11;
+                else if (op2 == "SB")
+                    op2Int = 12;
                 else op2Int = symbols[op2];
             }
 
@@ -302,27 +334,39 @@ namespace CS4380_Project2
         {
             //if (args.Length < 1) { Console.WriteLine("No arguments"); return; }
 
-            string file = "test.asm";
+            string file = "test3.asm";
 
-            Assembler assembler = new Assembler();
+            Assembler assembler = new Assembler(10000);
             assembler.PassOne(file);
             assembler.PassTwo(file);
             //assembler.PassOne(args[0]);
             //assembler.PassTwo(args[0]);
 
-            VM vm = new VM(assembler.code, assembler.mem);
+            VM vm = new VM(assembler.code, assembler.PC, assembler.SIZE, assembler.mem);
             vm.Run();
             Console.ReadKey();
         }
 
         int[] reg;
-        int PC;
         byte[] mem;
 
-        VM(int startIndex, byte[] memory)
+        VM(int startIndex, int stackLimit, int size, byte[] memory)
         {
-            reg = new int[8];
-            PC = startIndex;
+            reg = new int[13];
+            
+            // Register 8 will be the PC register
+            reg[8]= startIndex;
+            
+            // Register 9 is the Stack Limit register
+            reg[9] = stackLimit;
+           
+            // Register 10 will be the the Stack Pointer which will point at the top of the stack. Right now there is nothing on the top of the stack so this points to the "bottom"
+            reg[10] = size - 4;
+
+            // Register 11 is the Frame Pointer which points to the bottom of the current frame. This register is not initialized right now because there are no frames on the stack
+            
+            //Register 12 will be the Stack "Bottom"
+            reg[12] = size - 4;
             mem = memory;
         }
 
@@ -339,6 +383,14 @@ namespace CS4380_Project2
                 {
                     case 1:
                         JMP(inst);
+                        break;
+
+                    case 2:
+                        JMR(inst);
+                        break;
+
+                    case 3:
+                        BNZ(inst);
                         break;
 
                     case 5:
@@ -402,6 +454,10 @@ namespace CS4380_Project2
                         TRP(inst);
                         break;
 
+                    case 22:
+                        STRadd(inst);
+                        break;
+
                     case 23:
                         LDRadd(inst);
                         break;
@@ -420,30 +476,40 @@ namespace CS4380_Project2
 
         int[] Fetch()
         {
-            int opCode = BitConverter.ToInt32(mem, PC);
-            int op1 = BitConverter.ToInt32(mem, PC + 4);
-            int op2 = BitConverter.ToInt32(mem, PC + 8);
+            int opCode = BitConverter.ToInt32(mem, reg[8]);
+            int op1 = BitConverter.ToInt32(mem, reg[8]+ 4);
+            int op2 = BitConverter.ToInt32(mem, reg[8]+ 8);
 
             int[] inst = new int[] { opCode, op1, op2 };
 
-            PC += 12;
+            reg[8]+= 12;
 
             return inst;
         }
 
         void JMP(int[] inst)
         {
-            PC = inst[1];
+            reg[8]= inst[1];
+        }
+
+        void JMR(int[] inst)
+        {
+            reg[8] = reg[inst[1]];
+        }
+
+        void BNZ(int[] inst)
+        {
+            if (reg[inst[1]] != 0) reg[8] = inst[2];
         }
 
         void BLT(int[] inst)
         {
-            if (reg[inst[1]] < 0) PC = inst[2];
+            if (reg[inst[1]] < 0) reg[8] = inst[2];
         }
 
         void BRZ(int[] inst)
         {
-            if (reg[inst[1]] == 0) PC = inst[2];
+            if (reg[inst[1]] == 0) reg[8] = inst[2];
         }
 
         void MOV(int[] inst)
@@ -508,6 +574,17 @@ namespace CS4380_Project2
 
         }
 
+        void STRadd(int[] inst)
+        {
+            var bytes = BitConverter.GetBytes(reg[inst[1]]);
+
+            int j = 0;
+            for (int i = reg[inst[2]]; i < reg[inst[2]] + 4; i++)
+            {
+                mem[i] = bytes[j++];
+            }
+        }
+
         void ADD(int[] inst)
         {
             reg[inst[1]] = reg[inst[1]] + reg[inst[2]];
@@ -544,6 +621,16 @@ namespace CS4380_Project2
             {
                 int i = reg[3];
                 Console.Write(i);
+            }
+            else if (inst[1] == 4)
+            {
+                char input = Console.ReadKey().KeyChar;
+                if (input == '\r') input = '\n';
+                reg[3] = input;
+            }
+            else if (inst[1] == 99)
+            {
+                Math.Abs(3);
             }
 
         }

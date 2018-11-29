@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
-namespace CS4380_Project3
+namespace CS4380_Project4
 {
     class Assembler
     {
@@ -15,7 +15,7 @@ namespace CS4380_Project3
         public int code;
         bool codeSet;
         public byte[] mem;
-        string[] instSym = new string[] { "ADD", "ADI", "SUB", "MUL", "DIV", "AND", "OR", "CMP", "TRP", "MOV", "LDA", "STR", "LDR", "LDB", "JMP", "JMR", "BRZ", "BNZ", "STB", "BLT" };
+        string[] instSym = new string[] { "ADD", "ADI", "SUB", "MUL", "DIV", "AND", "OR", "CMP", "TRP", "MOV", "LDA", "STR", "LDR", "LDB", "JMP", "JMR", "BRZ", "BNZ", "BGT", "STB", "BLT" };
         string[] regSym = new string[] { "PC", "SL", "SP", "FP", "SB" };
 
         public Assembler(int size)
@@ -184,6 +184,10 @@ namespace CS4380_Project3
                     opInt = 3;
                     break;
 
+                case "BGT":
+                    opInt = 4;
+                    break;
+
                 case "BLT":
                     opInt = 5;
                     break;
@@ -334,7 +338,7 @@ namespace CS4380_Project3
         {
             //if (args.Length < 1) { Console.WriteLine("No arguments"); return; }
 
-            string file = "test3.asm";
+            string file = "proj4.asm";
 
             Assembler assembler = new Assembler(10000);
             assembler.PassOne(file);
@@ -353,18 +357,19 @@ namespace CS4380_Project3
         VM(int startIndex, int stackLimit, int size, byte[] memory)
         {
             reg = new int[13];
-            
+
             // Register 8 will be the PC register
-            reg[8]= startIndex;
-            
+            reg[8] = startIndex;
+
             // Register 9 is the Stack Limit register
             reg[9] = stackLimit;
-           
+
             // Register 10 will be the the Stack Pointer which will point at the top of the stack. Right now there is nothing on the top of the stack so this points to the "bottom"
             reg[10] = size - 4;
 
             // Register 11 is the Frame Pointer which points to the bottom of the current frame. This register is not initialized right now because there are no frames on the stack
-            
+            reg[11] = size - 4;
+
             //Register 12 will be the Stack "Bottom"
             reg[12] = size - 4;
             mem = memory;
@@ -391,6 +396,10 @@ namespace CS4380_Project3
 
                     case 3:
                         BNZ(inst);
+                        break;
+
+                    case 4:
+                        BGT(inst);
                         break;
 
                     case 5:
@@ -477,19 +486,19 @@ namespace CS4380_Project3
         int[] Fetch()
         {
             int opCode = BitConverter.ToInt32(mem, reg[8]);
-            int op1 = BitConverter.ToInt32(mem, reg[8]+ 4);
-            int op2 = BitConverter.ToInt32(mem, reg[8]+ 8);
+            int op1 = BitConverter.ToInt32(mem, reg[8] + 4);
+            int op2 = BitConverter.ToInt32(mem, reg[8] + 8);
 
             int[] inst = new int[] { opCode, op1, op2 };
 
-            reg[8]+= 12;
+            reg[8] += 12;
 
             return inst;
         }
 
         void JMP(int[] inst)
         {
-            reg[8]= inst[1];
+            reg[8] = inst[1];
         }
 
         void JMR(int[] inst)
@@ -500,6 +509,11 @@ namespace CS4380_Project3
         void BNZ(int[] inst)
         {
             if (reg[inst[1]] != 0) reg[8] = inst[2];
+        }
+
+        void BGT(int[] inst)
+        {
+            if (reg[inst[1]] > 0) reg[8] = inst[2];
         }
 
         void BLT(int[] inst)
@@ -617,6 +631,11 @@ namespace CS4380_Project3
                 char c = (char)reg[3];
                 Console.Write(c);
             }
+            else if (inst[1] == 2)
+            {
+                int input = int.Parse(Console.ReadLine());
+                reg[3] = input;
+            }
             else if (inst[1] == 1)
             {
                 int i = reg[3];
@@ -624,13 +643,14 @@ namespace CS4380_Project3
             }
             else if (inst[1] == 4)
             {
-                char input = Console.ReadKey().KeyChar;
+                //char input = Console.ReadKey().KeyChar;
+                char input = (char)Console.Read();
                 if (input == '\r') input = '\n';
                 reg[3] = input;
             }
             else if (inst[1] == 99)
             {
-                Math.Abs(3);
+                Math.Abs(3); // This is purely here for a breakpoint
             }
 
         }
